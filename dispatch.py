@@ -16,12 +16,10 @@ GO_DOWN=1
 NONE=2
 
 # 时间
-DOOR_TIME=1 # 开关门时间
-DELAY_TIME=0.5 # 启动、静止切换延迟时间
 RUN_TIME=1 # 运行时通过一层时间
-WAIT_TIME=5 # 等待接客时间
-WAIT_TIME_2=6
-WAIT_TIME_3=7
+WAIT_TIME=3 # 等待接客时间
+WAIT_TIME_2=4
+WAIT_TIME_3=5
 
 # 警报状态 warn_state
 USABLE=1 # 电梯可用
@@ -116,17 +114,14 @@ class Controller(object):
                         c+=1
                     else:
                         break
-                t=abs(self.cur_level[elev]-whichFloor)*RUN_TIME
+                t=abs(self.cur_level[elev]-whichFloor)*RUN_TIME+c*WAIT_TIME # 运行时间+每次到达楼层开关门时间
             # 若不顺行
             else:
-                t+=abs(self.cur_level[elev]-1)*RUN_TIME+(DELAY_TIME*2+DOOR_TIME*2+WAIT_TIME*1)*len(self.com_list[elev])
-                c = 0
-                for e in self.com_reverse_list[elev]:
-                    if e > whichFloor:
-                        c += 1
-                    else:
-                        break
-                t+=abs(1-whichFloor)*RUN_TIME+(DELAY_TIME*2+DOOR_TIME*2+WAIT_TIME*1)*c+DELAY_TIME*1
+                com_end_level=self.com_list[elev][-1] # 正向运行到的最后一个楼层
+                cur_level=self.cur_level[elev] # 该电梯此时所处楼层
+                t=abs(cur_level-com_end_level)*RUN_TIME+len(self.com_list[elev])*WAIT_TIME # 顺行运行到底的时间
+                t+=abs(com_end_level-whichFloor)*RUN_TIME # 反向运行到目标楼层时间(忽略其中开门等待等用时）
+
         return t
     # endregion
 
@@ -142,6 +137,7 @@ class Controller(object):
 
         # 若该层此前没有任务则进行调度
         if self.level_cmd[whichFloor]==NONE:
+            self.level_cmd[whichFloor]=choice
             # 选择最佳调度电梯
             for ELEV in ableElev:
                 #可运行的电梯
@@ -160,9 +156,15 @@ class Controller(object):
                 if cur_level<=whichFloor and elev_state==RUNNING_DOWN or cur_level>=whichFloor and elev_state==RUNNING_UP:
                     self.com_reverse_list[BESTELEV].append(whichFloor)
                     self.com_reverse_list[BESTELEV].sort(reverse=bool(1 - self.elev_state[BESTELEV]))
+                    print("不顺路，加入反向列表")
+                else:
+                    self.com_list[BESTELEV].append(whichFloor)
+                    self.com_list[BESTELEV].sort(reverse=bool(self.elev_state[BESTELEV]))
+                    print("顺路，加入正向列表")
             else:
                 self.com_list[BESTELEV].append(whichFloor)
                 self.com_list[BESTELEV].sort(reverse=bool(self.elev_state[BESTELEV]))
+                print("顺路，加入正向列表")
     # endregion
 
     # region 内部控制调度，将按下的楼层加入命令队列

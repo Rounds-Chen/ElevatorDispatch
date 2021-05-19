@@ -1,5 +1,8 @@
 # 进程管理——电梯调度系统
 
+* **学号**：1851049
+* **姓名**：陈中悦
+
 
 
 ## 项目目的
@@ -17,46 +20,9 @@
 
 * 开发语言：python
 
-  主要引用模块：
+  引用模块：
 
   > PyQt5==5.15.4
-
-
-
-## 项目结构
-
-```
-├─resources
-│  ├─btn
-│  │      close_hover.png
-│  │      close_n.png
-│  │      close_pressed.png
-│  │      down_btn_normal.png
-│  │      down_btn_pressed.png
-│  │      open_hover.png
-│  │      open_n.png
-│  │      open_pressed.png
-│  │      up_btn_normal.png
-│  │      up_btn_pressed.png
-│  │
-│  ├─icon
-│  │      icon.png
-│  │
-│  ├─screen
-│  │      down.png
-│  │      down_2.png
-│  │      up.png
-│  │      up_2.png
-│  │
-│  └─warn
-│          a_warn.png
-│          warn.png
-|
-│  dispatch.py
-│  ElevatorDispatch.py
-│  ElevatorUI.py
-│  requirements.txt
-```
 
 
 
@@ -74,7 +40,7 @@
 
 ## 项目演示
 
-安装好依赖的第三方库，在项目文件夹下终端输入:
+安装好<u>依赖的第三方库</u>，在项目文件夹下<u>终端输入</u>:
 
 ```python
 python ElevatorDispatch.py
@@ -82,135 +48,45 @@ python ElevatorDispatch.py
 
 
 
-
-
 ## 项目展示
-
-
 
 #### 界面说明
 
 ![界面](display/界面.jpg)
 
-
-
-####  内部命令
+#### 内部命令
 
 ![内部调度](display/内部调度.gif)
-
-
 
 #### 外部命令
 
 ![外部调度](display/外部调度.gif)
 
-
-
 #### 开关门命令
 
 ![开关门功能](display/开关门功能.gif)
 
-
-
-#### 警报器命令
+#### 报警器命令
 
 ![报警器](display/报警器.gif)
 
-
-
-
-
-##  系统分析
-
-### 电梯内部命令处理
-
-* 触发事件：电梯内部乘客点击楼层按钮
-
-* 响应条件：该电梯处于非警报状态
-
-* 符号说明：电梯当前楼层`curLevel`，目标楼层`targetLevel`
-
-* 预期响应：
-
-  * 若`targetLevel`>`curLevel`:
-    * 若电梯静止，将`targetLevel`加入该电梯顺行命令列表
-    * 若电梯向上运动，将`targetLevel`加入该电梯顺行命令列表
-    * 若电梯向下运动，将`targetLevel`加入该电梯逆行命令列表
-  * 若`targetLevel<curLevel`：
-    * 若电梯静止，将`targetLevel`加入该电梯顺行命令列表
-    * 若电梯向上运动，将`targetLevel`加入该电梯逆行命令列表
-    * 若电梯向下运动，将`targetLevel`加入该电梯顺行命令列表
-
-  * 若`targetLevel=curLevel`:
-    * 若电梯静止，直接响应该命令
-    * 若电梯非静止，将该命令加入该电梯逆行命令列表
-
-
-
-### 外部楼层命令处理
-
-* 触发事件：某楼层乘客点击上行或下行按钮
-* 响应条件：5部电梯非全部处于警报状态
-* 符号说明：该乘客所在楼层`whichLevel`，乘客预定义较大值（1000）`INFINITY`
-* 预期响应：
-  * 若`whichLevel`楼层当前已有命令待执行：忽略此次命令
-  * 若`whichLevel`楼层当前未有命令待执行：
-    1. 使用`_calTime()`函数计算5部电梯预期响应该命令所需时间，
-       * 非警报状态电梯：根据电梯当前楼层，运行状态及方向，待处理命令列表 计算预期响应用时；
-       * 警报状态电梯：默认响应时间为`INFINITY`
-    2. 选择预期响应用时最短的电梯`BESTELEV`作为命令响应电梯，同时其他电梯忽略该命令，
-       * 无法顺路到达`whichLevel`：即`BESTELEV`当前楼层高于`whichLevel`且正向上运行或`BESTELEV`当前楼层低于`whichLevel`且正向下运行，将`whichLevel`加入该电梯逆行命令列表
-       * 若能顺路到达或电梯静止：将`whichLevel`加入该电梯顺行命令列表
-
-
-
-## 方案设计
-
-
-
 ## 系统设计
 
-#### 变量设计
+#### 核心变量设计
 
-```python
-INFINITY=1000
-LEVEL_NUMS=20 #楼层数
+|         电梯状态         |  值  |  乘客选择状态   |  值  |    时间     |  值  |
+| :----------------------: | :--: | :-------------: | :--: | :---------: | :--: |
+|  RUNNING_UP（向上运行）  |  0   |  GO_UP（上行）  |  0   |  RUN_TIME   |  1   |
+| RUNNING_DOWN（向下运行） |  1   | GO_DOWN（下行） |  1   |  WAIT_TIME  |  3   |
+|      STILL（静止）       |  2   |   NONE（无）    |  2   | WAIT_TIME_2 |  4   |
+|                          |      |                 |      | WAIT_TIME_3 |  5   |
 
-# 电梯状态 
-RUNNING_UP=0 #上行
-RUNNING_DOWN=1 # 下行
-STILL = 2 # 静止
-
-# 乘客选择状态
-GO_UP=0
-GO_DOWN=1
-NONE=2
-
-# 时间
-DOOR_TIME=1 # 开关门时间
-DELAY_TIME=0.5 # 启动、静止切换延迟时间
-RUN_TIME=1 # 运行时通过一层时间
-WAIT_TIME=5 # 等待接客时间
-WAIT_TIME_2=6
-WAIT_TIME_3=7
-
-# 警报状态
-USABLE=1 # 电梯可用
-DISABLE=0 # 电梯损坏
-
-# 门的管理
-OPEN_DOOR=0 # 开门
-CLOSE_DOOR=1 # 关门
-DOOR_OPENED=1 # 门在开着
-DOOR_CLOSED=0 # 门在关着
-
-# 动画状态
-READY_START=0 # 就绪运行
-READY_STOP=1 # 就绪停止
-NOPE=2 # 空状态
-```
-
-
+|      警报状态       | 值   |        门的管理         | 值   |        动画状态         | 值   |
+| :-----------------: | ---- | :---------------------: | ---- | :---------------------: | ---- |
+| DISABLE（电梯可用） | 0    |    OPEN_DOOR（开门）    | 0    | READY_START（就绪运行） | 0    |
+| USABLE（电梯损坏）  | 1    |   CLOSE_DOOR（关门）    | 1    | READY_STOP（就绪停止）  | 1    |
+|                     |      | DOOR_CLOSED（门在关着） | 0    |     NOPE（空状态）      | 2    |
+|                     |      | DOOR_OPENED（门在开着） | 1    |                         |      |
 
 #### 类设计
 
@@ -220,21 +96,19 @@ NOPE=2 # 空状态
   class Controller(object):
   	def __init__(self,n,UI):
   
-      def _calTime(self, elev, whichFloor):
-      def externDis(self,whichFloor,choice):
+      def _calTime(self, elev, whichFloor): # 计算预期时间
+      def externDis(self,whichFloor,choice): # 外部命令调度函数
   
-      def internDis(self,elev,targetFloor):
+      def internDis(self,elev,targetFloor): # 内部命令调度函数
   
-      def doorsCtrl(self,elev,cmd):
-      def openDoorAnim(self,elev):
-      def closeDoorAnim(self,elev:
+      def doorsCtrl(self,elev,cmd): # 开关门控制函数
+      def openDoorAnim(self,elev): # 开门动画
+      def closeDoorAnim(self,elev: # 关门动画
   
-      def warnsCtrl(self,elev):
+      def warnsCtrl(self,elev): # 警报器控制函数
   
-      def updateState(self):
+      def updateState(self): # 状态更新函数
   ```
-
-  
 
 * UI窗口类`Ui_Window`
 
@@ -242,384 +116,243 @@ NOPE=2 # 空状态
   class Ui_Window(object):
       def __init__(self):
       
-      def setupUi(self, MainWindow):
-      def retranslateUi(self, MainWindow):
+      def setupUi(self, MainWindow): # 生成ui所需控件
+      def retranslateUi(self, MainWindow):# ui控件添加文字
   
-      def doorsClick(self):
+      def doorsClick(self): # 开关门按钮响应函数
       
-      def cmdClick(self):
+      def cmdClick(self): # 上下行按钮响应函数
   
-      def warnClick(self):
+      def warnClick(self): # 警报器按钮响应函数
       
-      def levelClick(self):
+      def levelClick(self): # 内部楼层按钮响应函数
   ```
-
-  
 
 * 界面显示类`Elevator`
 
-  ```
+  ```python
   class Elevator(QMainWindow,ElevatorUI.Ui_Window):
       def __init__(self)
   ```
 
   
 
-
-
 ## 系统实现
 
 ### 内部命令
 
-* 逻辑流程：乘客点击某楼层按钮 ==> 设置该按钮点击样式并禁用该按钮 ==> 调用内命令处理函数处理命令
+* **核心算法**：**LOOK算法**
 
-* 具体实现：
+  电梯调度的核心是 SCAN 算法，这是操作系统用于磁盘调度的算法之一。SCAN 算法的核心思想非常简单，就是在一条路上来来回回的走，一个方向上走到头之后换反方向再走到头。
+
+  LOOK算法是SCAN算法的一种改进。对LOOK算法而言，电梯同样在最底层和最顶层之间运行。但当LOOK算法发现<u>电梯所移动的方向上**不再有请求时**立即改变运行方向</u>，而扫描算法则需要移动到最底层或者最顶层时才改变运行方向。
+
+* **具体实现**：
 
   * 若`targetLevel`>`curLevel`:
-    * 若电梯静止，将`targetLevel`加入该电梯顺行命令列表并将其排序
-    * 若电梯向上运动，将`targetLevel`加入该电梯顺行命令列表并将其排序
-    * 若电梯向下运动，将`targetLevel`加入该电梯逆行命令列表将其排序
+    * 若电梯 *向上运动或静止*，将`targetLevel`加入该电梯<u>顺行命令列表并将其排序</u>
+    * 若电梯 *向下运动，*将`targetLevel`加入该电梯<u>逆行命令列表将其排序</u>
   * 若`targetLevel<curLevel`：
-    * 若电梯静止，将`targetLevel`加入该电梯顺行命令列表并将其逆序
-    * 若电梯向上运动，将`targetLevel`加入该电梯逆行命令列表并将其逆序
-    * 若电梯向下运动，将`targetLevel`加入该电梯顺行命令列表并将其逆序
-
+    * 若电梯 *向上运动*，将`targetLevel`加入该电梯<u>逆行命令列表并将其逆序</u>
+    * 若电梯 *向下运动或静止*，将`targetLevel`加入该电梯<u>顺行命令列表并将其逆序</u>
+    
   * 若`targetLevel=curLevel`:
-    * 若电梯静止，直接响应该命令，播放开门动画并将该按钮样式、可用性复原
-    * 若电梯非静止，将该命令加入该电梯逆行命令列表
+    * 若电梯 *静止*，<u>直接响应</u>该命令，播放开门动画并将该按钮样式、可用性复原
+    * 若电梯 *非静止*，将该命令<u>加入该电梯逆行命令列表</u>
 
-* 核心代码：
+* **核心代码：**（详细代码见dispatch.py)
 
   ```python
-  # region 内部控制调度，将按下的楼层加入命令队列
-      # elev->按下楼层的电梯编号，targetFloor->按下的楼层
-      def internDis(self,elev,targetFloor):
-          curLevel=self.cur_level[elev] # 电梯当前位置
-          print("电梯当前位置{},目的地{}".format(curLevel,targetFloor))
-  
-          # 目标楼层更高
+           # 目标楼层更高
           if targetFloor>curLevel:
-              # 此电梯在静止
-              if self.elev_state[elev]==STILL:
-                  self.com_list[elev].append(targetFloor)
-                  self.com_list[elev].sort()
-              else:
+              ## 若此电梯在静止
+              	## 直接加入顺行列表并排序（代码略）
+              ## 若电梯非静止
                   if self.elev_state[elev]==RUNNING_UP:
-                      self.com_list[elev].append(targetFloor)
-                      self.com_list[elev].sort()
-                      print("加入后电梯{}的指令队列为：".format(elev, self.com_list[elev]))
+                      ## 加入顺行列表并排序（代码略）
                   else:
-                      self.com_reverse_list[elev].append(targetFloor)
-                      self.com_reverse_list[elev].sort()
-                      print("加入后电梯{}的反向指令队列为：".format(elev, self.com_reverse_list[elev]))
+                      ## 加入逆行列表并排序（代码略）
   
           # 目标楼层更低
           elif targetFloor<curLevel:
-              # 此电梯在静止
-              if self.elev_state[elev]==STILL:
-                  self.com_list[elev].append(targetFloor)
-                  self.com_list[elev].sort(reverse=True)
-              else:
+              ## 若此电梯在静止
+              	## 直接加入顺行列表并排序（代码略）
+              ## 若电梯非静止
                   if self.elev_state[elev]==RUNNING_DOWN:
-                      self.com_list[elev].append(targetFloor)
-                      self.com_list[elev].sort(reverse=True)
-                      print("加入后电梯的指令队列为：",self.com_list[elev])
+                      ## 加入顺行列表并排序（代码略）
                   else:
-                      self.com_reverse_list[elev].append(targetFloor)
-                      self.com_reverse_list[elev].sort(reverse=True)
-                      print("加入后电梯的反向指令队列为：",self.com_reverse_list[elev])
+                      ## 加入逆行列表并排序（代码略）
   
           # 就在目标楼层
           else:
-              if self.elev_state[elev]==STILL: # 电梯静止==>开门，回复按钮状态
-                  self.doorsCtrl(elev,OPEN_DOOR)
-                  # 模拟电梯内部楼层按钮复原
-                  self._elev.inLevelButtons[elev][targetFloor].setEnabled(True)
-                  self._elev.inLevelButtons[elev][targetFloor].setStyleSheet("font: 10pt \"AcadEref\";\n"
-                                          "background-color: rgb(226, 226, 226);border-radius: 15px;border:0.5px solid #000000;")
-              else:
-                  self.com_reverse_list[elev].append(targetFloor)
-      # endregion
+              ## 若此电梯静止
+              	## 直接开门
+              ## 电梯非静止
+              	## 加入逆行列表并排序（代码略）
   ```
-
-
-
-
 
 ### 外部命令
 
-* 逻辑流程：乘客点击某楼层上行或下行按钮 ==> 改变此按钮样式 == > 调用外部命令处理函数处理命令
+* **核心算法：**
 
-* 具体实现：
+  若此楼层当前<u>已有命令待响应，忽略此次命令</u>；反之<u>计算所有可用电梯预期响应命令时间</u>，选择<u>预期用时最短</u>电梯作为响应电梯，同时其他电梯<u>忽略该命令</u>。
 
-  * 外部命令处理函数：
-    * 若`whichLevel`楼层当前已有命令待执行：忽略此次命令
-    * 若`whichLevel`楼层当前未有命令待执行：
+  根据该电梯当前状态以及目标楼层，判断将该命令加入顺行或逆行命令列表，判断方式同上述内部命令。
 
-    1. 使用`_calTime()`函数计算5部电梯预期响应该命令所需时间，
-       * 非警报状态电梯：根据电梯当前楼层，运行状态及方向，待处理命令列表 计算预期响应用时；
-       * 警报状态电梯：默认响应时间为`INFINITY`
-    2. 选择预期响应用时最短的电梯`BESTELEV`作为命令响应电梯，同时其他电梯忽略该命令，
-       * 无法顺路到达`whichLevel`：即`BESTELEV`当前楼层高于`whichLevel`且正向上运行或`BESTELEV`当前楼层低于`whichLevel`且正向下运行，将`whichLevel`加入该电梯逆行命令列表并根据其运行状态排序
-       * 若能顺路到达或电梯此前无命令待处理：将`whichLevel`加入该电梯顺行命令列表并根据其运行状态排序
+* **外部命令处理函数：**
+  
+  * 若`whichLevel`楼层当前 *已有命令待执行*：<u>忽略</u>此次命令
+  * 若`whichLevel`楼层当前 *未有命令待执行*：
+  
+    * 使用`_calTime()`函数计算5部电梯<u>预期响应该命令所需时间</u>，
+    * 选择预期响应<u>用时最短</u>的电梯`BESTELEV`作为命令响应电梯，同时<u>其他电梯忽略</u>该命令。
+  
+* **时间计算函数：**
 
-  * 时间计算函数：
+  *  若 *电梯静止*，t=|`curLevel`-`whichLevel`|*`RUN_TIME`
+  
+  * 若 *电梯运行*
+  
+    * 顺路 *可到达*：
+  
+      t=|`curLevel`-`whichLevel`|*`RUN_TIME`+中途预期停靠次数\*`WAIT_TIME`
+  
+    * 顺路 *不可达*：
+  
+      (`com_end_level`表示顺行最后一个命令楼层)
+  
+      t=|`curLevel`-`com_end_level`|*`RUN_TIME`+中途预期停靠次数\*`WAIT_TIME`+|`com_end_level`-`whichLevel`|\*`RUN_time`
 
-    <font color=red>**@TODO**</font> 
-
-* 核心代码：
+* **核心代码：**（详细代码见dispatch.py)
 
   ```python
-     # region 计算接客时间
-      # elev->电梯编号， whichFloor->发出命令楼层, choice-> 上行/下行命令
-      def _calTime(self, elev, whichFloor):
-          t=INFINITY
+  		"""计算预期时间核心伪代码"""
           # 若电梯静止
           if self.elev_state[elev]==STILL:
               t=abs(self.cur_level[elev]-whichFloor)*RUN_TIME
           else:
-              # 若顺行方向
-              if (whichFloor<self.cur_level[elev] and self.elev_state[elev]==RUNNING_DOWN) or (whichFloor>self.cur_level[elev] and self.elev_state[elev]==RUNNING_UP):
-                  c=0
-                  for e in self.com_list[elev]:
-                      if e>whichFloor:
-                          c+=1
-                      else:
-                          break
-                  t=abs(self.cur_level[elev]-whichFloor)*RUN_TIME
-              # 若不顺行
-              else:
-                  t+=abs(self.cur_level[elev]-1)*RUN_TIME+(DELAY_TIME*2+DOOR_TIME*2+WAIT_TIME*1)*len(self.com_list[elev])
-                  c = 0
-                  for e in self.com_reverse_list[elev]:
-                      if e > whichFloor:
-                          c += 1
-                      else:
-                          break
-                  t+=abs(1-whichFloor)*RUN_TIME+(DELAY_TIME*2+DOOR_TIME*2+WAIT_TIME*1)*c+DELAY_TIME*1
-          return t
-      # endregion
+              ## 若顺行方向
+                  ## 计算途径解决命令数 c（代码略）
+                  t=abs(self.cur_level[elev]-whichFloor)*RUN_TIME+c*WAIT_TIME
+              ## 若不顺行
+                  com_end_level=self.com_list[elev][-1] # 正向运行到的最后一个楼层
+                  cur_level=self.cur_level[elev] # 该电梯此时所处楼层
+                  t=abs(cur_level-com_end_level)*RUN_TIME+len(self.com_list[elev])*WAIT_TIME # 顺行运行到底的时间
+                  t+=abs(com_end_level-whichFloor)*RUN_TIME # 反向运行到目标楼层时间(忽略其中开门等待等用时）
   
-      #  region 外部控制调度,选择最短接客时间电梯作为目标电梯
-      # whichFloor->发出命令楼层，choice->上行/下行命令
-      def externDis(self,whichFloor,choice):
-          pick_time = [INFINITY,INFINITY,INFINITY,INFINITY,INFINITY] # 每部电梯去到时间
-          ableElev=[] # 可用电梯列表
-          for i in range(self.elevNum):
-              if self.warn_state[i]==USABLE:
-                  ableElev.append(i)
-          print("可用的电梯列表：",ableElev)
-  
-          # 若该层此前没有任务则进行调度
-          if self.level_cmd[whichFloor]==NONE:
-              # 选择最佳调度电梯
-              for ELEV in ableElev:
-                  #可运行的电梯
-                  elev_time=self._calTime(ELEV,whichFloor)
-                  pick_time[ELEV]=elev_time
-              # for debug
-              print("最短的时间列表：{}".format(pick_time))
-              BESTELEV=pick_time.index(min(pick_time))
-              print("选择的电梯是：{}".format(BESTELEV))
-  
-              # 加入该电梯命令队列
+  			'''外部调度核心伪代码'''
+             ## 筛选可用电梯列表 ableElev(代码略)
+             ## 计算ableElev中各电梯预期运行时间（代码略）
+             BESTELEV=pick_time.index(min(pick_time))
+             
+             # 加入该电梯命令队列
+             # 若该电梯已有命令
               if self.com_list[BESTELEV]:
                   cur_level=self.cur_level[BESTELEV] # 该电梯当前楼层
                   elev_state=self.elev_state[BESTELEV] # 该电梯运行状态
-                  # 不顺路
-                  if cur_level<=whichFloor and elev_state==RUNNING_DOWN or cur_level>=whichFloor and elev_state==RUNNING_UP:
-                      self.com_reverse_list[BESTELEV].append(whichFloor)
-                      self.com_reverse_list[BESTELEV].sort(reverse=bool(1 - self.elev_state[BESTELEV]))
+                  ## 不顺路，则加入反向列表并排序（代码略）
+                  ## 顺路，则加入正向列表并排序（代码略）
+              # 若该电梯没有命令
               else:
-                  self.com_list[BESTELEV].append(whichFloor)
-                  self.com_list[BESTELEV].sort(reverse=bool(self.elev_state[BESTELEV]))
-      # endregion
+                  ## 加入正向列表并排序（代码略）
   ```
-
   
-
-
+  
 
 ### 电梯状态更新
 
 控制对象中设置计时器，每经过1s调用一次`updateState`函数，以更新各电梯状态并作出相应的UI效果。
 
-* 具体实现：
+电梯主要有`STILL`，`RUNNING_UP`,`RUNNING_DOWN`三状态，电梯动画有`READY_START`,`READY_STOP`,`WAIT_TIME`等状态。每次检查电梯当前所处状态，按照时间逻辑顺序进行状态转换并执行相应的逻辑和UI操作。
 
-  遍历5部电梯：
+* **转换图：**
 
-  * 若该电梯正处于乘客点击开门按钮后尚未自动关门阶段，根据电梯当前所处阶段进行状态转换
-  * 若该电梯处于警报状态，略过
-  * 若该电梯顺行命令队列非空：
-    * 电梯门处于`DOOR_OPENED`状态：等待关门完成
-    * 电梯处于`STILL`状态：开门，根据下一命令更新状态，电梯动画状态转为 `READY_START`状态
-    * 电梯动画处于`READY_START`状态：关门， 电梯动画状态转为 `NOPE`
-    * 电梯动画处于`READY_STOP`状态：电梯动画状态转为 `WAIT_TIME`
-    * 电梯动画处于`WAIT_TIME`状态：结束当前命令，播放关门动画，电梯动画状态转为`NOPE`，电梯转为`STILL`状态
-    * 其他非警报状态：
-      * 若下一目标楼层=当前所处楼层：播放开门动画，电梯动画转为`READY_STOP`状态
-      * 若下一目标楼层$\neq$当前所处楼层：更新电梯当前所处楼层
-  * 若该电梯顺行命令队列为空：
-    * 若其逆行命令队列非空，二者内容交换
+  <img src="display/状态转换.png" alt="状态转换" style="zoom:33%;" />
 
-* 核心代码
+* **核心代码:**（详细代码见dispatch.py)
 
   ```python
-  # 更新电梯状态
-      def updateState(self):
           for elev in range(self.elevNum):
-              # region 控制电梯门按钮打开后自动关闭
+              ## 根据动画状态控制电梯门按钮打开后自动关闭
               if self.elev_anim_state[elev]==WAIT_TIME_3:
-                  self.warn_state[elev] = USABLE  # 此电梯启用
-                  self.closeDoorAnim(elev)  # 关门
-                  self.doorsState[elev] = DOOR_CLOSED
-  
-                  self.door_ctrl_state[elev] = NOPE
-                  self.elev_anim_state[elev]=NOPE
-                  print("准备自动关门")
-                  continue
+                  ## 自动关门（代码略）
   
               if self.elev_anim_state[elev]==WAIT_TIME_2:
-                  self.elev_anim_state[elev]=WAIT_TIME_3
-                  print("开门后第二次等待")
-                  continue
+                  ## 转为WAIT_TIME_3 （代码略）
   
-              # 控制开关门动画自动切换
               if self.door_ctrl_state[elev] ==OPEN_DOOR:
-                  self.elev_anim_state[elev] = WAIT_TIME_2
-                  print("开门后第一次等待")
-                  continue
-              # endregion
-  
+                  ## 转为WAIT_TIME_2（代码略）
   
               # 不可用电梯略过
               if self.warn_state[elev] == DISABLE:
                   continue
   
-              # region 若电梯可用且命令队列非空
+              # 若电梯可用且命令队列非空
               if self.com_list[elev]:
                   # 门在开着，等着关门
                   if self.doorsState[elev]==DOOR_OPENED:
                       continue
-  
                   # 电梯静止状态
                   if self.elev_state[elev]==STILL:
-                      print("电梯{}开门接客".format(elev))
-                      self.openDoorAnim(elev)
-  
-                      # 更新电梯运行状态
-                      cmd=self.com_list[elev][0]
-                      if cmd>self.cur_level[elev]:
-                          self.elev_state[elev]=RUNNING_UP
-                          self._elev.screenUPLabels[elev].setStyleSheet("border-image:url(resources/screen/up.png)")
-                      elif cmd<self.cur_level[elev]:
-                          self.elev_state[elev]=RUNNING_DOWN
-                          self._elev.screenDWLabels[elev].setStyleSheet("border-image:url(resources/screen/down.png)")
-                      else:
-                          self.elev_state[elev]=RUNNING_UP
-  
+                      ## 根据顺行指令列表更新电梯运行状态（代码略）                 
                       self.elev_anim_state[elev]=READY_START # 静止==>就绪运行
-                      print("静止状态转为就绪运行状态，发生了开门，转换状态")
-  
                   # 就绪运行状态
                   if self.elev_anim_state[elev]==READY_START:
                       self.closeDoorAnim(elev)
                       self.elev_anim_state[elev]=NOPE # 动画置空
                       print("就绪运行状态，发生了关门")
-  
                   # 换客时间
                   if self.elev_anim_state[elev]==READY_STOP:
                       self.elev_anim_state[elev]=WAIT_TIME
                       continue
-  
                   # 就绪停止状态
                   if self.elev_anim_state[elev]==WAIT_TIME:
-                      self.com_list[elev].pop(0)  # 结束当前命令
-                      self.level_cmd[elev]=NONE
-                      self.closeDoorAnim(elev)
+                      ## 结束当前指令并进行ui转换（代码略）
                       self.elev_anim_state[elev]=NOPE # 动画置空
                       self.elev_state[elev]=STILL # 就绪停止==>静止
-                      self._elev.screenUPLabels[elev].setStyleSheet("border-image:url(resources/screen/up_2.png)")
-                      self._elev.screenDWLabels[elev].setStyleSheet("border-image:url(resources/screen/down_2.png)")
-                      print("就绪停止转为静止状态，发生了关门")
-  
+                      
                   elif self.warn_state[elev]==USABLE:
-                      cmd=self.com_list[elev][0] # 下一个目标楼层
-                      if cmd>self.cur_level[elev] :
-                          self.elev_state[elev]=RUNNING_UP
-                          self.cur_level[elev]+=1
-                          print("电梯{}显示楼层{},目标指令是{}".format(elev, self.cur_level[elev]+1,cmd))
-                          #  电梯显示屏幕数字变化
-                          self._elev.screenLevelLabels[elev].setProperty("value", self.cur_level[elev]+1)
-                      elif cmd<self.cur_level[elev]:
-                          self.elev_state[elev] = RUNNING_DOWN
-                          self.cur_level[elev]-=1
-                          print("电梯{}显示楼层{},目标指令是{}".format(elev,self.cur_level[elev]+1,cmd))
-                          #  电梯显示屏幕数字变化
-                          self._elev.screenLevelLabels[elev].setProperty("value", self.cur_level[elev]+1)
-                      else:
-                          #  内部电梯按钮复原
-                          self._elev.inLevelButtons[elev][cmd].setEnabled(True)
-                          self._elev.inLevelButtons[elev][cmd].setStyleSheet("font: 10pt \"AcadEref\";\n"
-                                          "background-color: rgb(226, 226, 226);border-radius: 15px;border:0.5px solid #000000;")
-                          self.openDoorAnim(elev)
-                          self._elev.levelCmdButtons[2*cmd].setStyleSheet("border-image:url(resources/btn/up_btn_normal.png)")
-                          self._elev.levelCmdButtons[2*cmd+1].setStyleSheet("border-image:url(resources/btn/down_btn_normal.png)")
-  
+                      ## 若尚未到达下一个命令楼层，更新电梯当前楼层以及ui等（代码略）
+                      ## 若已到达下一命令楼层
+                          ##  内部电梯按钮ui复原（代码略）                        
                           self.elev_anim_state[elev]=READY_STOP  # 运行==> 就绪停止
-                          print("已到达目标楼层，转为就绪停止状态")
-              # endregion
   
               # 若反向命令队列非空
               elif self.com_reverse_list[elev]:
                   self.com_list[elev]=self.com_reverse_list[elev].copy()
                   self.com_reverse_list[elev].clear()
   ```
-
   
-
-
+  
 
 ### 其他命令
 
 #### 警报器控制函数
 
-* 若电梯此时静止并且警报按钮可用，进行响应
+* 若电梯此时 *静止* 并且 *警报按钮可用* ，<u>进行响应</u>
 
-* 核心代码：
+* **核心代码：**（详细代码见dispatch.py)
 
   ```python
-      def warnsCtrl(self,elev):
           if self.elev_state[elev]==STILL and self.warn_state[elev]==USABLE:
               self.warn_state[elev]=DISABLE
-              self._elev.warnButtons[elev].setStyleSheet("border-image:url(resources/warn/a_warn.png)")
-              self.MessBox = QtWidgets.QMessageBox.information(self._elev, "WARN", "电梯{}已损坏!".format(elev+1))
-              print("电梯{}的报警器被点击，禁用！".format(elev))
-              
-              # 内部电梯按钮禁用
-              for levelButton in self._elev.inLevelButtons[elev]:
-                  levelButton.setEnabled(False)
-              self._elev.openButtons[elev].setEnabled(False) # 内部开关门按钮禁用
-              self._elev.closeButtons[elev].setEnabled(False)
-              self._elev.warnButtons[elev].setEnabled(False) # 内部报警按钮禁用
-              self.door_ctrl_state[elev]=NOPE # 电梯自动应答关闭
-  
+              ## ui变换（代码略）
+              ## 内部电梯按钮禁用（代码略）
+              ## 内部开关门按钮禁用（代码略）
+              ## 内部报警按钮禁用（代码略）
+              ## 电梯自动应答关闭（代码略）
   ```
-
-
 
 #### 开关门控制函数
 
-* 若电梯此时静止且非警报状态，进行响应：
+* 若电梯此时 *静止* 且 *非警报状态* ，<u>进行响应</u>：
 
-  * 若电梯门处于`DOOR_CLOSED`且命令为`OPEN_DOOR`,进行开门操作
-  * 若电梯门处于`DOOR_OPENED`且命令为`CLOSE_DOOR`,进行关门操作
+  * 若电梯门处于`DOOR_CLOSED`且命令为`OPEN_DOOR`,进行<u>开门操作</u>
+  * 若电梯门处于`DOOR_OPENED`且命令为`CLOSE_DOOR`,进行<u>关门操作</u>
 
-* 核心代码：
+* **核心代码：**（详细代码见dispatch.py)
 
   ```python
-   # 门控制函数
-      def doorsCtrl(self,elev,cmd):
           # 静止状态可用的电梯才能控制门
           if self.elev_state[elev]==STILL:
               # 开门命令
@@ -636,7 +369,6 @@ NOPE=2 # 空状态
                       # 关门
                       self.doorsState[elev] = DOOR_CLOSED
                       self.closeDoorAnim(elev)
-  
   ```
-
+  
   

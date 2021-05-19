@@ -86,35 +86,37 @@ python ElevatorDispatch.py
 
 ## 项目展示
 
+
+
 #### 界面说明
 
-<img src="界面.jpg" alt="界面"  />
-
-
+![界面](display/界面.jpg)
 
 
 
 ####  内部命令
 
-![内部调度](内部调度.gif)
+![内部调度](display/内部调度.gif)
 
 
 
 #### 外部命令
 
-![外部调度](外部调度.gif)
+![外部调度](display/外部调度.gif)
 
 
 
 #### 开关门命令
 
-![开关门功能](开关门功能.gif)
+![开关门功能](display/开关门功能.gif)
 
 
 
 #### 警报器命令
 
-![报警器](报警器.gif)
+![报警器](display/报警器.gif)
+
+
 
 
 
